@@ -1,4 +1,4 @@
-# Distill — Video to PDF Notes
+# NOTTURA AI — Video to PDF Notes
 
 Capture any video lesson (including paid courses) and get a concise, structured PDF.
 
@@ -35,7 +35,7 @@ uvicorn main:app --reload --port 8000
 3. Click **Load unpacked**
 4. Select the `extension/` folder
 
-The Distill icon appears in your toolbar.
+The NOTTURA icon appears in your toolbar.
 
 ---
 
@@ -43,7 +43,7 @@ The Distill icon appears in your toolbar.
 
 1. Start the backend (`uvicorn main:app --reload --port 8000`)
 2. Open a lesson (Cantrill, Udemy, YouTube, anything)
-3. Click the Distill extension icon
+3. Click the NOTTURA extension icon
 4. Press **Start Capture**
 5. Watch the lesson (or let it play)
 6. Press **Stop & Generate PDF**

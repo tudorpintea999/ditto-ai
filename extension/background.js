@@ -3,5 +3,5 @@
 // This file is required by the manifest.
 
 chrome.runtime.onInstalled.addListener(() => {
-  console.log("Distill installed.");
+  console.log("NOTTURA installed.");
 });

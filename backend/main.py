@@ -15,7 +15,7 @@ from services.pdf import generate_pdf
 
 load_dotenv()
 
-app = FastAPI(title="Distill API")
+app = FastAPI(title="NOTTURA AI API")
 
 app.add_middleware(
     CORSMiddleware,
