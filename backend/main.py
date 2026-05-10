@@ -1,9 +1,10 @@
 import os
 import logging
 import traceback
-from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header
+import stripe
+from fastapi import FastAPI, UploadFile, File, Form, HTTPException, Header, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import Response
+from fastapi.responses import Response, JSONResponse
 from dotenv import load_dotenv
 
 logging.basicConfig(level=logging.INFO)
@@ -14,7 +15,7 @@ load_dotenv()
 from services.transcribe import transcribe_audio
 from services.structure import structure_transcript
 from services.pdf import generate_pdf
-from database import init_db, create_user, get_user_by_key, get_user_by_email, add_minutes
+from database import init_db, create_user, get_user_by_key, get_user_by_email, add_minutes, upgrade_user
 
 init_db()
 
@@ -126,3 +127,40 @@ async def process(
         media_type="application/pdf",
         headers={"Content-Disposition": f'attachment; filename="{safe_title}.pdf"'},
     )
+
+
+@app.get("/get-key")
+def get_key(email: str):
+    user = get_user_by_email(email)
+    if not user:
+        raise HTTPException(status_code=404, detail="No account found for this email.")
+    return {
+        "api_key": user["api_key"],
+        "plan": user["plan"],
+        "minutes_used": round(user["minutes_used"], 1),
+        "minutes_limit": user["minutes_limit"],
+    }
+
+
+@app.post("/webhook/stripe")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig = request.headers.get("stripe-signature", "")
+    secret = os.environ.get("STRIPE_WEBHOOK_SECRET", "")
+
+    try:
+        event = stripe.Webhook.construct_event(payload, sig, secret)
+    except stripe.errors.SignatureVerificationError:
+        raise HTTPException(status_code=400, detail="Invalid signature.")
+
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        email = (session.get("customer_details") or {}).get("email")
+        if email:
+            existing = get_user_by_email(email)
+            if not existing:
+                create_user(email)
+            upgrade_user(email)
+            logger.info("Upgraded user: %s", email)
+
+    return JSONResponse({"status": "ok"})
