@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Distill</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="noise"></div>
+
+  <div class="container">
+    <!-- HUD corner brackets -->
+    <div class="bracket tl"></div>
+    <div class="bracket tr"></div>
+    <div class="bracket bl"></div>
+    <div class="bracket br"></div>
+
+    <!-- Header -->
+    <header>
+      <div class="header-left">
+        <div class="status-dot" id="status-dot"></div>
+        <span class="status-label" id="status-label">STANDBY</span>
+      </div>
+      <h1 class="wordmark" data-text="DISTILL">DISTILL</h1>
+    </header>
+
+    <div class="divider"></div>
+
+    <!-- Waveform canvas (always present, hidden when not recording) -->
+    <div class="waveform-wrap" id="waveform-wrap">
+      <canvas id="waveform" width="260" height="48"></canvas>
+      <div class="waveform-label">AUDIO INPUT</div>
+    </div>
+
+    <!-- States -->
+    <div id="state-idle" class="state">
+      <p class="hint">Navigate to a video lesson.<br/>Press <strong>INITIATE</strong> to begin capture.</p>
+      <button id="btn-start" class="btn btn-primary">
+        <span class="btn-icon">▶</span> INITIATE CAPTURE
+      </button>
+    </div>
+
+    <div id="state-recording" class="state hidden">
+      <div class="rec-row">
+        <div class="rec-badge">● REC</div>
+        <span id="timer" class="timer">00:00</span>
+        <div class="rec-meta" id="rec-size">0 KB</div>
+      </div>
+      <button id="btn-stop" class="btn btn-danger">
+        <span class="btn-icon">■</span> STOP &amp; PROCESS
+      </button>
+    </div>
+
+    <div id="state-processing" class="state hidden">
+      <div class="scan-wrap">
+        <div class="scan-line"></div>
+        <div class="scan-grid">
+          <span>TRANSCRIPTION</span>
+          <span id="proc-step-1" class="proc-step">···</span>
+          <span>STRUCTURE</span>
+          <span id="proc-step-2" class="proc-step inactive">···</span>
+          <span>RENDER</span>
+          <span id="proc-step-3" class="proc-step inactive">···</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="state-done" class="state hidden">
+      <div class="done-row">
+        <div class="done-icon">✓</div>
+        <span class="done-label">NOTES COMPILED</span>
+      </div>
+      <a id="download-link" class="btn btn-primary" download="lesson-notes.pdf">
+        <span class="btn-icon">↓</span> DOWNLOAD PDF
+      </a>
+      <button id="btn-reset" class="btn btn-ghost">NEW CAPTURE</button>
+    </div>
+
+    <div id="state-error" class="state hidden">
+      <div class="error-row">
+        <span class="error-icon">⚠</span>
+        <span id="error-text" class="error-text">SYSTEM FAULT</span>
+      </div>
+      <button id="btn-reset-error" class="btn btn-ghost">RETRY</button>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <span id="footer-text">READY</span>
+      <span class="footer-version">v0.1</span>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
