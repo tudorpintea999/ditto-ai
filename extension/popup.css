@@ -406,6 +406,46 @@ header {
   line-height: 1.6;
 }
 
+/* ── Auth screen ── */
+.key-input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 8px 10px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--cyan);
+  letter-spacing: 0.05em;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.key-input:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 8px var(--cyan-dim);
+}
+.key-input::placeholder { color: var(--muted); }
+
+.auth-footer {
+  font-size: 11px;
+  color: var(--muted);
+  text-align: center;
+}
+.auth-footer a {
+  color: var(--cyan);
+  text-decoration: none;
+}
+.auth-footer a:hover { text-decoration: underline; }
+
+/* ── User info in footer ── */
+.footer-plan {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+}
+.footer-plan.paid { color: var(--green); }
+
 /* ── Footer ── */
 .footer {
   display: flex;

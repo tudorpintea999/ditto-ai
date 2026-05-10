@@ -1,4 +1,5 @@
 const BACKEND_URL = "http://207.180.248.185:8000";
+const REGISTER_URL = "https://nottura.ai/register"; // placeholder until domain is live
 
 let mediaRecorder = null;
 let audioChunks = [];
@@ -8,6 +9,7 @@ let secondsElapsed = 0;
 let totalBytes = 0;
 let analyser = null;
 let animFrameId = null;
+let currentApiKey = null;
 
 // Elements
 const statusDot = document.getElementById("status-dot");
@@ -18,6 +20,7 @@ const canvas = document.getElementById("waveform");
 const ctx2d = canvas.getContext("2d");
 
 const states = {
+  auth:       document.getElementById("state-auth"),
   idle:       document.getElementById("state-idle"),
   recording:  document.getElementById("state-recording"),
   processing: document.getElementById("state-processing"),
@@ -25,7 +28,75 @@ const states = {
   error:      document.getElementById("state-error"),
 };
 
-// ── State machine ────────────────────────────────────────────────────────────
+// ── Boot ──────────────────────────────────────────────────────────────────────
+
+chrome.storage.local.get(["api_key"], ({ api_key }) => {
+  if (api_key) {
+    currentApiKey = api_key;
+    showState("idle");
+    setStatus("", "STANDBY");
+    setFooter("READY");
+    loadUserInfo();
+  } else {
+    showState("auth");
+    setStatus("", "STANDBY");
+    setFooter("AUTH REQUIRED");
+  }
+});
+
+async function loadUserInfo() {
+  try {
+    const res = await fetch(`${BACKEND_URL}/me`, {
+      headers: { "x-api-key": currentApiKey },
+    });
+    if (!res.ok) {
+      // Key is invalid — force re-auth
+      chrome.storage.local.remove("api_key");
+      currentApiKey = null;
+      showState("auth");
+      setFooter("SESSION EXPIRED");
+      return;
+    }
+    const data = await res.json();
+    const remaining = data.minutes_remaining;
+    const plan = data.plan.toUpperCase();
+    setFooter(`${remaining} MIN LEFT`);
+  } catch (_) {}
+}
+
+// ── Auth screen ───────────────────────────────────────────────────────────────
+
+document.getElementById("link-register").href = REGISTER_URL;
+
+document.getElementById("btn-save-key").addEventListener("click", async () => {
+  const key = document.getElementById("api-key-input").value.trim();
+  if (!key.startsWith("nttr_")) {
+    document.getElementById("api-key-input").style.borderColor = "var(--red)";
+    return;
+  }
+
+  // Validate key against backend
+  try {
+    const res = await fetch(`${BACKEND_URL}/me`, {
+      headers: { "x-api-key": key },
+    });
+    if (!res.ok) {
+      document.getElementById("api-key-input").style.borderColor = "var(--red)";
+      setFooter("INVALID KEY");
+      return;
+    }
+    const data = await res.json();
+    currentApiKey = key;
+    chrome.storage.local.set({ api_key: key });
+    showState("idle");
+    setStatus("", "STANDBY");
+    setFooter(`${data.minutes_remaining} MIN LEFT`);
+  } catch (err) {
+    setFooter("CANNOT REACH SERVER");
+  }
+});
+
+// ── State machine ─────────────────────────────────────────────────────────────
 
 function setStatus(mode, label) {
   statusDot.className = "status-dot " + (mode || "");
@@ -43,7 +114,7 @@ function setFooter(text) {
   footerText.textContent = text;
 }
 
-// ── Timer ────────────────────────────────────────────────────────────────────
+// ── Timer ─────────────────────────────────────────────────────────────────────
 
 function startTimer() {
   secondsElapsed = 0;
@@ -73,7 +144,7 @@ function formatBytes(bytes) {
   return (bytes / (1024 * 1024)).toFixed(2) + " MB";
 }
 
-// ── Waveform ─────────────────────────────────────────────────────────────────
+// ── Waveform ──────────────────────────────────────────────────────────────────
 
 function startWaveform(stream) {
   const audioCtx = new AudioContext();
@@ -82,23 +153,17 @@ function startWaveform(stream) {
   analyser.fftSize = 512;
   analyser.smoothingTimeConstant = 0.8;
   source.connect(analyser);
-
   waveformWrap.classList.add("visible");
   drawWaveform();
 }
 
 function drawWaveform() {
   animFrameId = requestAnimationFrame(drawWaveform);
-
-  const w = canvas.width;
-  const h = canvas.height;
-  const bufferLength = analyser.frequencyBinCount;
-  const dataArray = new Uint8Array(bufferLength);
+  const w = canvas.width, h = canvas.height;
+  const dataArray = new Uint8Array(analyser.frequencyBinCount);
   analyser.getByteTimeDomainData(dataArray);
-
   ctx2d.clearRect(0, 0, w, h);
 
-  // Faint center line
   ctx2d.strokeStyle = "rgba(0,229,255,0.08)";
   ctx2d.lineWidth = 1;
   ctx2d.beginPath();
@@ -106,7 +171,6 @@ function drawWaveform() {
   ctx2d.lineTo(w, h / 2);
   ctx2d.stroke();
 
-  // Waveform
   const gradient = ctx2d.createLinearGradient(0, 0, w, 0);
   gradient.addColorStop(0,   "rgba(0,229,255,0)");
   gradient.addColorStop(0.1, "rgba(0,229,255,0.9)");
@@ -119,12 +183,10 @@ function drawWaveform() {
   ctx2d.shadowBlur = 6;
   ctx2d.beginPath();
 
-  const sliceWidth = w / bufferLength;
+  const sliceWidth = w / dataArray.length;
   let x = 0;
-
-  for (let i = 0; i < bufferLength; i++) {
-    const v = dataArray[i] / 128.0;
-    const y = (v * h) / 2;
+  for (let i = 0; i < dataArray.length; i++) {
+    const y = (dataArray[i] / 128.0 * h) / 2;
     i === 0 ? ctx2d.moveTo(x, y) : ctx2d.lineTo(x, y);
     x += sliceWidth;
   }
@@ -133,10 +195,7 @@ function drawWaveform() {
 }
 
 function stopWaveform() {
-  if (animFrameId) {
-    cancelAnimationFrame(animFrameId);
-    animFrameId = null;
-  }
+  if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
   ctx2d.clearRect(0, 0, canvas.width, canvas.height);
   waveformWrap.classList.remove("visible");
   analyser = null;
@@ -146,7 +205,6 @@ function stopWaveform() {
 
 document.getElementById("btn-start").addEventListener("click", async () => {
   setFooter("REQUESTING TAB AUDIO...");
-
   try {
     captureStream = await new Promise((resolve, reject) => {
       chrome.tabCapture.capture({ audio: true, video: false }, (stream) => {
@@ -158,14 +216,9 @@ document.getElementById("btn-start").addEventListener("click", async () => {
 
     audioChunks = [];
     mediaRecorder = new MediaRecorder(captureStream, { mimeType: "audio/webm" });
-
     mediaRecorder.ondataavailable = (e) => {
-      if (e.data.size > 0) {
-        audioChunks.push(e.data);
-        totalBytes += e.data.size;
-      }
+      if (e.data.size > 0) { audioChunks.push(e.data); totalBytes += e.data.size; }
     };
-
     mediaRecorder.start(1000);
     startTimer();
     startWaveform(captureStream);
@@ -179,7 +232,6 @@ document.getElementById("btn-start").addEventListener("click", async () => {
 
 document.getElementById("btn-stop").addEventListener("click", () => {
   if (!mediaRecorder) return;
-
   mediaRecorder.onstop = async () => {
     stopTimer();
     stopWaveform();
@@ -188,26 +240,18 @@ document.getElementById("btn-stop").addEventListener("click", () => {
     setStatus("busy", "PROCESSING");
     await sendToBackend(new Blob(audioChunks, { type: "audio/webm" }));
   };
-
   mediaRecorder.stop();
 });
 
-// ── Processing steps UI ───────────────────────────────────────────────────────
+// ── Processing steps ──────────────────────────────────────────────────────────
 
 function setStep(n) {
   const labels = { 1: "TRANSCRIPTION", 2: "STRUCTURE", 3: "RENDER" };
   for (let i = 1; i <= 3; i++) {
     const el = document.getElementById(`proc-step-${i}`);
-    if (i < n) {
-      el.className = "proc-step done-step";
-      el.textContent = "";
-    } else if (i === n) {
-      el.className = "proc-step";
-      el.textContent = "···";
-    } else {
-      el.className = "proc-step inactive";
-      el.textContent = "···";
-    }
+    if (i < n) { el.className = "proc-step done-step"; el.textContent = ""; }
+    else if (i === n) { el.className = "proc-step"; el.textContent = "···"; }
+    else { el.className = "proc-step inactive"; el.textContent = "···"; }
   }
   setFooter(labels[n] + "...");
 }
@@ -217,7 +261,6 @@ function setStep(n) {
 async function sendToBackend(audioBlob) {
   try {
     setStep(1);
-
     const formData = new FormData();
     formData.append("audio", audioBlob, "recording.webm");
 
@@ -225,14 +268,13 @@ async function sendToBackend(audioBlob) {
     if (tab?.title) formData.append("title", tab.title);
 
     setStep(2);
-
     const response = await fetch(`${BACKEND_URL}/process`, {
       method: "POST",
+      headers: { "x-api-key": currentApiKey },
       body: formData,
     });
 
     setStep(3);
-
     if (!response.ok) {
       const detail = await response.text();
       throw new Error(detail);
@@ -241,10 +283,10 @@ async function sendToBackend(audioBlob) {
     const pdfBlob = await response.blob();
     const url = URL.createObjectURL(pdfBlob);
     document.getElementById("download-link").href = url;
-
     showState("done");
     setStatus("done", "COMPLETE");
     setFooter("PDF READY");
+    loadUserInfo(); // refresh minutes remaining
   } catch (err) {
     showError(err.message);
   }
@@ -268,7 +310,7 @@ function reset() {
   stopWaveform();
   showState("idle");
   setStatus("", "STANDBY");
-  setFooter("READY");
+  loadUserInfo();
 }
 
 document.getElementById("btn-reset").addEventListener("click", reset);

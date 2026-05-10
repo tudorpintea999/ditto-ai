@@ -33,6 +33,18 @@
       <div class="waveform-label">AUDIO INPUT</div>
     </div>
 
+    <!-- Auth screen -->
+    <div id="state-auth" class="state hidden">
+      <p class="hint">Enter your API key to access NOTTURA AI.</p>
+      <input id="api-key-input" class="key-input" type="text" placeholder="nttr_···" spellcheck="false" />
+      <button id="btn-save-key" class="btn btn-primary">
+        <span class="btn-icon">→</span> ACTIVATE
+      </button>
+      <div class="auth-footer">
+        No key? <a id="link-register" href="#" target="_blank">Get access</a>
+      </div>
+    </div>
+
     <!-- States -->
     <div id="state-idle" class="state">
       <p class="hint">Navigate to a video lesson.<br/>Press <strong>INITIATE</strong> to begin capture.</p>
