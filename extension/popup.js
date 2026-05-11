@@ -1,4 +1,4 @@
-const BACKEND_URL = "http://207.180.248.185:8000";
+const BACKEND_URL = "https://api.notturaai.xyz";
 const REGISTER_URL = "https://nottura.ai/register"; // placeholder until domain is live
 
 let mediaRecorder = null;
