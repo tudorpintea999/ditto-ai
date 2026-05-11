@@ -66,9 +66,21 @@ body {
 
 /* ── Header ── */
 header {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  justify-content: space-between;
+}
+
+.header-right {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.user-avatar {
+  border-radius: 50%;
+  border: 1px solid var(--cyan);
+  box-shadow: 0 0 8px var(--cyan-dim);
+  cursor: default;
 }
 
 .header-left {

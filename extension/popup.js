@@ -50,7 +50,6 @@ async function loadUserInfo() {
       headers: { "x-api-key": currentApiKey },
     });
     if (!res.ok) {
-      // Key is invalid — force re-auth
       chrome.storage.local.remove("api_key");
       currentApiKey = null;
       showState("auth");
@@ -58,10 +57,44 @@ async function loadUserInfo() {
       return;
     }
     const data = await res.json();
-    const remaining = data.minutes_remaining;
-    const plan = data.plan.toUpperCase();
-    setFooter(`${remaining} MIN LEFT`);
+    setFooter(`${data.minutes_remaining} MIN LEFT`);
+    if (data.email) drawAvatar(data.email);
   } catch (_) {}
+}
+
+function drawAvatar(email) {
+  const avatarCanvas = document.getElementById("user-avatar");
+  const initial = (email[0] || "?").toUpperCase();
+  const size = avatarCanvas.width;
+  const ac = avatarCanvas.getContext("2d");
+
+  ac.clearRect(0, 0, size, size);
+
+  // Background
+  ac.fillStyle = "#0d0d10";
+  ac.beginPath();
+  ac.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ac.fill();
+
+  // Subtle cyan radial glow
+  const grd = ac.createRadialGradient(size / 2, size / 2, 2, size / 2, size / 2, size / 2);
+  grd.addColorStop(0, "rgba(0,229,255,0.12)");
+  grd.addColorStop(1, "rgba(0,229,255,0)");
+  ac.fillStyle = grd;
+  ac.beginPath();
+  ac.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+  ac.fill();
+
+  // Initial
+  ac.fillStyle = "#00e5ff";
+  ac.font = `700 ${Math.round(size * 0.46)}px 'Rajdhani', sans-serif`;
+  ac.textAlign = "center";
+  ac.textBaseline = "middle";
+  ac.shadowColor = "#00e5ff";
+  ac.shadowBlur = 8;
+  ac.fillText(initial, size / 2, size / 2 + 1);
+
+  avatarCanvas.classList.remove("hidden");
 }
 
 // ── Auth screen ───────────────────────────────────────────────────────────────
@@ -91,6 +124,7 @@ document.getElementById("btn-save-key").addEventListener("click", async () => {
     showState("idle");
     setStatus("", "STANDBY");
     setFooter(`${data.minutes_remaining} MIN LEFT`);
+    if (data.email) drawAvatar(data.email);
   } catch (err) {
     setFooter("CANNOT REACH SERVER");
   }
