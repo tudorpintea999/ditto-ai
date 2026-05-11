@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 const API = "https://api.notturaai.xyz";
-const STRIPE_LINK = "https://buy.stripe.com/YOUR_LINK"; // replace after going live
+const STRIPE_LINK = "https://buy.stripe.com/fZu5kDf22fb6aJt7Pq04800"; // replace after going live
 
 export default function Home() {
   const [email, setEmail] = useState("");
