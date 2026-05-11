@@ -1,5 +1,5 @@
 const BACKEND_URL = "https://api.notturaai.xyz";
-const REGISTER_URL = "https://nottura.ai/register"; // placeholder until domain is live
+const REGISTER_URL = "https://notturaai.xyz";
 
 let mediaRecorder = null;
 let audioChunks = [];
