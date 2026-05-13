@@ -3,7 +3,8 @@
 import { useState } from "react";
 
 const API = "https://api.notturaai.xyz";
-const STRIPE_LINK = "https://buy.stripe.com/fZu5kDf22fb6aJt7Pq04800"; // replace after going live
+const STRIPE_LINK = "https://buy.stripe.com/fZu5kDf22fb6aJt7Pq04800";
+const CHROME_STORE = "https://chromewebstore.google.com/detail/nottura-ai-%E2%80%94-video-to-pdf/kldfpbnafadeaobolmkkleddcifechac";
 
 export default function Home() {
   const [email, setEmail] = useState("");
@@ -36,7 +37,10 @@ export default function Home() {
       {/* ── Nav ── */}
       <nav style={styles.nav}>
         <span style={styles.logo}>NOTTURA<span style={{ color: "var(--cyan)" }}>AI</span></span>
-        <a href={STRIPE_LINK} style={styles.navCta}>Get Access →</a>
+        <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <a href={CHROME_STORE} target="_blank" rel="noopener noreferrer" style={styles.navChromeLink}>Add to Chrome</a>
+          <a href={STRIPE_LINK} style={styles.navCta}>Get Access →</a>
+        </div>
       </nav>
 
       {/* ── Hero ── */}
@@ -56,10 +60,10 @@ export default function Home() {
           readable notes. No re-watching. No scrubbing. Just knowledge on paper.
         </p>
         <div style={styles.heroActions}>
-          <a href={STRIPE_LINK} style={styles.btnPrimary}>Start for $9 / month</a>
-          <span style={{ ...styles.freeNote, ...{ fontFamily: "'Share Tech Mono', monospace" } }}>
-            60 min free · no credit card to try
-          </span>
+          <a href={CHROME_STORE} target="_blank" rel="noopener noreferrer" style={styles.btnPrimary}>
+            Add to Chrome — Free
+          </a>
+          <a href={STRIPE_LINK} style={styles.btnSecondary}>Upgrade to Pro $9 / month</a>
         </div>
 
         <div style={styles.bracketBL} />
@@ -220,6 +224,26 @@ const styles: Record<string, React.CSSProperties> = {
     padding: "8px 16px",
     borderRadius: 2,
     transition: "background 0.2s",
+  },
+  navChromeLink: {
+    fontFamily: "'Share Tech Mono', monospace",
+    fontSize: 12,
+    letterSpacing: "0.1em",
+    color: "var(--muted)",
+    transition: "color 0.2s",
+  },
+  btnSecondary: {
+    background: "transparent",
+    border: "1px solid var(--muted)",
+    color: "var(--muted)",
+    padding: "12px 28px",
+    borderRadius: 2,
+    fontFamily: "'Rajdhani', sans-serif",
+    fontWeight: 700,
+    fontSize: 14,
+    letterSpacing: "0.1em",
+    cursor: "pointer",
+    transition: "all 0.2s",
   },
   hero: {
     position: "relative",
