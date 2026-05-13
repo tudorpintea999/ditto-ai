@@ -16,6 +16,7 @@ from services.transcribe import transcribe_audio
 from services.structure import structure_transcript
 from services.pdf import generate_pdf
 from database import init_db, create_user, get_user_by_key, get_user_by_email, add_minutes, upgrade_user
+from services.email import send_welcome_email
 
 init_db()
 
@@ -161,6 +162,8 @@ async def stripe_webhook(request: Request):
             if not existing:
                 create_user(email)
             upgrade_user(email)
-            logger.info("Upgraded user: %s", email)
+            user = get_user_by_email(email)
+            sent = send_welcome_email(email, user["api_key"])
+            logger.info("Upgraded user: %s | email sent: %s", email, sent)
 
     return JSONResponse({"status": "ok"})
