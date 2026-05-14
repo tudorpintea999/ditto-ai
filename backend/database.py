@@ -15,15 +15,22 @@ def init_db():
     conn = get_db()
     conn.execute("""
         CREATE TABLE IF NOT EXISTS users (
-            id            INTEGER PRIMARY KEY AUTOINCREMENT,
-            email         TEXT UNIQUE NOT NULL,
-            api_key       TEXT UNIQUE NOT NULL,
-            plan          TEXT NOT NULL DEFAULT 'free',
-            minutes_used  REAL NOT NULL DEFAULT 0,
-            minutes_limit REAL NOT NULL DEFAULT 60,
-            created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+            id              INTEGER PRIMARY KEY AUTOINCREMENT,
+            email           TEXT UNIQUE NOT NULL,
+            api_key         TEXT UNIQUE NOT NULL,
+            plan            TEXT NOT NULL DEFAULT 'free',
+            minutes_used    REAL NOT NULL DEFAULT 0,
+            minutes_limit   REAL NOT NULL DEFAULT 60,
+            created_at      TEXT NOT NULL DEFAULT (datetime('now')),
+            billing_anchor  INTEGER DEFAULT NULL
         )
     """)
+    # Add billing_anchor to existing databases that don't have it
+    try:
+        conn.execute("ALTER TABLE users ADD COLUMN billing_anchor INTEGER DEFAULT NULL")
+        conn.commit()
+    except Exception:
+        pass  # Column already exists
     conn.commit()
     conn.close()
 
@@ -78,12 +85,35 @@ def add_minutes(api_key: str, minutes: float):
 
 
 def upgrade_user(email: str):
+    from datetime import datetime
+    billing_anchor = datetime.utcnow().day
     conn = get_db()
     try:
         conn.execute(
-            "UPDATE users SET plan = 'paid', minutes_limit = 99999 WHERE email = ?",
-            (email,),
+            "UPDATE users SET plan = 'paid', minutes_limit = 99999, billing_anchor = ? WHERE email = ?",
+            (billing_anchor, email),
         )
         conn.commit()
+    finally:
+        conn.close()
+
+
+def reset_due_users():
+    """Reset minutes_used for paid users whose billing anniversary is today."""
+    from datetime import datetime
+    today = datetime.utcnow().day
+    conn = get_db()
+    try:
+        rows = conn.execute(
+            "SELECT email FROM users WHERE plan = 'paid' AND billing_anchor = ?",
+            (today,)
+        ).fetchall()
+        if rows:
+            conn.execute(
+                "UPDATE users SET minutes_used = 0 WHERE plan = 'paid' AND billing_anchor = ?",
+                (today,)
+            )
+            conn.commit()
+        return [r["email"] for r in rows]
     finally:
         conn.close()
