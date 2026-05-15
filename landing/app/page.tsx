@@ -1,9 +1,16 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 const STRIPE_LINK = "https://buy.stripe.com/fZu5kDf22fb6aJt7Pq04800";
 const CHROME_STORE = "https://chromewebstore.google.com/detail/nottura-ai-%E2%80%94-video-to-pdf/kldfpbnafadeaobolmkkleddcifechac";
 
 export default function Home() {
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
+  }, [isDark]);
 
   return (
     <main style={{ minHeight: "100vh" }}>
@@ -12,6 +19,13 @@ export default function Home() {
       <nav style={styles.nav}>
         <span style={styles.logo}>NOTTURA<span style={{ color: "var(--cyan)" }}>AI</span></span>
         <div style={{ display: "flex", gap: 12, alignItems: "center" }}>
+          <button
+            className="theme-toggle"
+            onClick={() => setIsDark(!isDark)}
+            title="Toggle theme"
+          >
+            {isDark ? "LIGHT" : "DARK"}
+          </button>
           <a href={CHROME_STORE} target="_blank" rel="noopener noreferrer" style={styles.navChromeLink}>Add to Chrome</a>
           <a href={STRIPE_LINK} style={styles.navCta}>Get Access →</a>
         </div>
@@ -140,7 +154,7 @@ const styles: Record<string, React.CSSProperties> = {
     borderBottom: "1px solid var(--border)",
     position: "sticky",
     top: 0,
-    background: "rgba(7,7,9,0.92)",
+    background: "var(--nav-bg)",
     backdropFilter: "blur(12px)",
     zIndex: 100,
   },
@@ -149,7 +163,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontWeight: 700,
     fontSize: 22,
     letterSpacing: "0.25em",
-    color: "#fff",
+    color: "var(--heading)",
   },
   navCta: {
     fontFamily: "'Share Tech Mono', monospace",
@@ -202,7 +216,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontSize: "clamp(48px, 8vw, 88px)",
     lineHeight: 1.05,
     letterSpacing: "-0.02em",
-    color: "#fff",
+    color: "var(--heading)",
   },
   subheadline: {
     fontSize: 18,
@@ -232,11 +246,6 @@ const styles: Record<string, React.CSSProperties> = {
     transition: "all 0.2s",
     textDecoration: "none",
   },
-  freeNote: {
-    fontSize: 11,
-    color: "var(--muted)",
-    letterSpacing: "0.08em",
-  },
   section: {
     maxWidth: 960,
     margin: "0 auto",
@@ -255,7 +264,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "'Rajdhani', sans-serif",
     fontWeight: 700,
     fontSize: "clamp(28px, 4vw, 44px)",
-    color: "#fff",
+    color: "var(--heading)",
     letterSpacing: "-0.01em",
     marginBottom: 8,
   },
@@ -284,7 +293,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "'Rajdhani', sans-serif",
     fontWeight: 700,
     fontSize: 18,
-    color: "#fff",
+    color: "var(--heading)",
   },
   stepBody: {
     fontSize: 14,
@@ -334,7 +343,7 @@ const styles: Record<string, React.CSSProperties> = {
     gap: 4,
     maxWidth: 440,
     width: "100%",
-    boxShadow: "0 0 60px rgba(0,229,255,0.04)",
+    boxShadow: "0 0 60px var(--cyan-dim)",
   },
   price: {
     display: "flex",
@@ -346,7 +355,7 @@ const styles: Record<string, React.CSSProperties> = {
     fontFamily: "'Rajdhani', sans-serif",
     fontWeight: 700,
     fontSize: 72,
-    color: "#fff",
+    color: "var(--heading)",
     letterSpacing: "-0.03em",
   },
   pricePer: {
@@ -367,46 +376,7 @@ const styles: Record<string, React.CSSProperties> = {
     letterSpacing: "0.08em",
     color: "var(--text)",
     paddingBottom: 10,
-    borderBottom: "1px solid rgba(255,255,255,0.04)",
-  },
-  keyForm: {
-    display: "flex",
-    gap: 12,
-    width: "100%",
-    maxWidth: 480,
-    flexWrap: "wrap",
-  },
-  keyInput: {
-    flex: 1,
-    minWidth: 220,
-    background: "var(--bg2)",
-    border: "1px solid var(--border)",
-    borderRadius: 2,
-    padding: "12px 14px",
-    fontFamily: "'Share Tech Mono', monospace",
-    fontSize: 13,
-    color: "var(--text)",
-    outline: "none",
-  },
-  keyResult: {
-    marginTop: 20,
-    padding: 20,
-    background: "var(--bg2)",
-    border: "1px solid rgba(0,255,136,0.2)",
-    borderRadius: 4,
-    maxWidth: 480,
-    width: "100%",
-  },
-  keyCode: {
-    fontFamily: "'Share Tech Mono', monospace",
-    fontSize: 13,
-    color: "var(--cyan)",
-    background: "rgba(0,229,255,0.06)",
-    padding: "8px 12px",
-    borderRadius: 2,
-    display: "block",
-    wordBreak: "break-all",
-    letterSpacing: "0.05em",
+    borderBottom: "1px solid var(--border)",
   },
   footer: {
     display: "flex",
@@ -416,7 +386,6 @@ const styles: Record<string, React.CSSProperties> = {
     borderTop: "1px solid var(--border)",
     marginTop: 40,
   },
-  // Corner brackets (reused from extension)
   bracketTL: {
     position: "absolute", top: 20, left: 20,
     width: 16, height: 16,
