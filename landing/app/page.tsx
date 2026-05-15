@@ -1,35 +1,9 @@
 "use client";
 
-import { useState } from "react";
-
-const API = "https://api.notturaai.xyz";
 const STRIPE_LINK = "https://buy.stripe.com/fZu5kDf22fb6aJt7Pq04800";
 const CHROME_STORE = "https://chromewebstore.google.com/detail/nottura-ai-%E2%80%94-video-to-pdf/kldfpbnafadeaobolmkkleddcifechac";
 
 export default function Home() {
-  const [email, setEmail] = useState("");
-  const [apiKey, setApiKey] = useState("");
-  const [keyStatus, setKeyStatus] = useState<"idle" | "loading" | "done" | "error">("idle");
-  const [errorMsg, setErrorMsg] = useState("");
-
-  async function handleGetKey(e: React.FormEvent) {
-    e.preventDefault();
-    setKeyStatus("loading");
-    setErrorMsg("");
-    try {
-      const res = await fetch(`${API}/get-key?email=${encodeURIComponent(email)}`);
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Not found.");
-      }
-      const data = await res.json();
-      setApiKey(data.api_key);
-      setKeyStatus("done");
-    } catch (err: any) {
-      setErrorMsg(err.message);
-      setKeyStatus("error");
-    }
-  }
 
   return (
     <main style={{ minHeight: "100vh" }}>
@@ -143,44 +117,6 @@ export default function Home() {
             ~$0.07 per 20-min video in API costs
           </p>
         </div>
-      </section>
-
-      {/* ── Get Key ── */}
-      <section style={{ ...styles.section, alignItems: "center" }} id="get-key">
-        <p style={styles.sectionLabel} className="mono">// ALREADY PAID?</p>
-        <h2 style={{ ...styles.sectionTitle, textAlign: "center" }}>Retrieve your API key.</h2>
-        <p style={{ color: "var(--muted)", marginBottom: 24, textAlign: "center", maxWidth: 480 }}>
-          Enter the email you used at checkout. We'll show your key instantly.
-        </p>
-        <form onSubmit={handleGetKey} style={styles.keyForm}>
-          <input
-            type="email"
-            required
-            placeholder="your@email.com"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            style={styles.keyInput}
-          />
-          <button type="submit" style={styles.btnPrimary} disabled={keyStatus === "loading"}>
-            {keyStatus === "loading" ? "···" : "Get Key →"}
-          </button>
-        </form>
-        {keyStatus === "done" && (
-          <div style={styles.keyResult}>
-            <p style={{ color: "var(--green)", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, marginBottom: 8 }}>
-              ✓ KEY RETRIEVED
-            </p>
-            <code style={styles.keyCode}>{apiKey}</code>
-            <p style={{ color: "var(--muted)", fontSize: 12, marginTop: 8, fontFamily: "'Share Tech Mono', monospace" }}>
-              Paste this into the NOTTURA AI extension popup.
-            </p>
-          </div>
-        )}
-        {keyStatus === "error" && (
-          <p style={{ color: "var(--red)", fontFamily: "'Share Tech Mono', monospace", fontSize: 12, marginTop: 12 }}>
-            ⚠ {errorMsg}
-          </p>
-        )}
       </section>
 
       {/* ── Footer ── */}
