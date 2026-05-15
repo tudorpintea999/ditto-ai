@@ -6,7 +6,7 @@ const STRIPE_LINK = "https://buy.stripe.com/fZu5kDf22fb6aJt7Pq04800";
 const CHROME_STORE = "https://chromewebstore.google.com/detail/nottura-ai-%E2%80%94-video-to-pdf/kldfpbnafadeaobolmkkleddcifechac";
 
 export default function Home() {
-  const [isDark, setIsDark] = useState(true);
+  const [isDark, setIsDark] = useState(false);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", isDark ? "dark" : "light");
