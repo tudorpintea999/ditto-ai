@@ -130,18 +130,6 @@ async def process(
     )
 
 
-@app.get("/get-key")
-def get_key(email: str):
-    user = get_user_by_email(email)
-    if not user:
-        raise HTTPException(status_code=404, detail="No account found for this email.")
-    return {
-        "api_key": user["api_key"],
-        "plan": user["plan"],
-        "minutes_used": round(user["minutes_used"], 1),
-        "minutes_limit": user["minutes_limit"],
-    }
-
 
 @app.post("/webhook/stripe")
 async def stripe_webhook(request: Request):
